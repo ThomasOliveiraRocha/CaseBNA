@@ -25,32 +25,28 @@ A solução completa envolve:
 - [x] Criar `.gitignore`
 - [x] Documentar projeto no `README.md`
 
- **Commit principal:**  
-`feat: adiciona endpoint /scrape com extração simples de título da página`
-
 ---
 
 ### Dia 2 - Quarta-feira (30/07)
 
-- [ ] Melhorar scraping com mais dados úteis (ex: headings, e-mails, telefone, etc)
-- [ ] Criar banco de dados local (SQLite ou MongoDB)
-- [ ] Implementar cache de scraping para URLs já processadas
-- [ ] Modularizar código
+- [x] Melhorar scraping com mais dados úteis (ex: headings, e-mails, telefone, etc)
+- [x] Criar banco de dados local (SQLite ou MongoDB)
+- [x] Implementar cache de scraping para URLs já processadas
+- [x] Modularizar código
 
 ---
 
 ### Dia 3 - Quinta-feira (31/07)
 
-- [ ] Integrar com modelo de IA (OpenAI) para extrair e resumir informações comerciais
-- [ ] Criar rota `/analyze` que usa IA com o conteúdo da página
-- [ ] Iniciar frontend com React (Vite)
-- [ ] Criar tela básica com envio de URL e exibição dos resultados
+- [x] Criar rota `/analyze` que usa IA com o conteúdo da página
+- [x] Iniciar frontend com React (Vite)
+- [x] Criar tela básica com envio de URL e exibição dos resultados
 
 ---
 
 ### Dia 4 - Sexta-feira (01/08)
 
-- [ ] Finalizar frontend com visualização de histórico e dados
+- [x] Finalizar frontend com visualização de histórico e dados
 - [ ] Criar autenticação simples com JWT
 - [ ] Criar painel admin (bônus)
 - [ ] Dockerizar o projeto
@@ -60,31 +56,4 @@ A solução completa envolve:
 
 ---
 
-Abra no navegador:
-http://127.0.0.1:8000/docs
 
-Teste o endpoint /scrape?url=https://www.google.com
-http://127.0.0.1:8000/scrape?url=https://www.google.com
-
-## Tecnologias Utilizadas
-
-- Python + FastAPI (backend)
-- BeautifulSoup + Requests (web scraping)
-- SQLite (cache de scraping)
-- OpenAI API (IA para extração de dados úteis)
-- React + Vite (frontend)
-- Docker
-- Git + GitHub
-
----
-
-## Como Rodar o Projeto (até agora)
-
-### Backend
-
-```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate  # ou source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
