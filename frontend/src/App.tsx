@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
@@ -9,7 +9,11 @@ function App() {
   const [error, setError] = useState('');
   const [showScrape, setShowScrape] = useState(true);
   const [showAnalysis, setShowAnalysis] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+
+  useEffect(() => {
+    document.title = 'CaseBNA';
+  }, []);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -60,9 +64,8 @@ function App() {
             placeholder="Digite a URL..."
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="url-input"
           />
-          <button onClick={handleSubmit} disabled={loading} className="analyze-button">
+          <button onClick={handleSubmit} disabled={loading}>
             {loading ? 'Processando...' : 'Analisar'}
           </button>
           {error && <p className="error">Erro: {error}</p>}
@@ -73,7 +76,7 @@ function App() {
             <div className="result-block">
               <div className="result-header">
                 <h2>Dados Extraídos</h2>
-                <button onClick={() => setShowScrape(!showScrape)} className="toggle-button">
+                <button onClick={() => setShowScrape(!showScrape)}>
                   {showScrape ? 'Esconder' : 'Mostrar'}
                 </button>
               </div>
@@ -89,7 +92,7 @@ function App() {
             <div className="result-block">
               <div className="result-header">
                 <h2>Resumo Comercial</h2>
-                <button onClick={() => setShowAnalysis(!showAnalysis)} className="toggle-button">
+                <button onClick={() => setShowAnalysis(!showAnalysis)}>
                   {showAnalysis ? 'Esconder' : 'Mostrar'}
                 </button>
               </div>
