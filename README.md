@@ -41,18 +41,15 @@ A solução completa envolve:
 - [x] Criar rota `/analyze` que usa IA com o conteúdo da página
 - [x] Iniciar frontend com React (Vite)
 - [x] Criar tela básica com envio de URL e exibição dos resultados
+- [x] Finalizar frontend com visualização de histórico e dados
+- [x] Criar autenticação simples com JWT
+- [x] Criar painel admin (bônus)
 
 ---
 
 ### Dia 4 - Sexta-feira (01/08)
+- [x] Montar Apresentação
 
-- [x] Finalizar frontend com visualização de histórico e dados
-- [ ] Criar autenticação simples com JWT
-- [ ] Criar painel admin (bônus)
-- [ ] Dockerizar o projeto
-- [ ] Adicionar testes com `pytest`
-- [ ] Criar script de execução (`start.sh` ou `make run`)
-- [ ] Deploy (Render para backend, Vercel/Netlify para frontend)
 
 ---
 
