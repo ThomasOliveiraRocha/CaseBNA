@@ -9,6 +9,9 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import Security, Body
 from app import auth, crud, schemas
 from app.models import ScrapedSite  
+import re
+from collections import Counter
+
 
 app = FastAPI()
 
@@ -98,72 +101,224 @@ def scrape(payload: UrlRequest, db: Session = Depends(get_db)):
     save_scrape(db, url, data)
     return {"source": "scraped", "data": data}
 
+
+#------------------------------------------------------------------
+#--------------------------Separar Palavras------------------------  
+#------------------------------------------------------------------ 
+STOPWORDS = {
+    "de", "a", "o", "que", "e", "do", "da", "em", "um", "para", "com", "não", "uma",
+    "os", "no", "se", "na", "por", "mais", "as", "dos", "como", "mas", "foi", "ao",
+    "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando", "muito", "há",
+    "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela",
+    "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas",
+    "me", "esse", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem",
+    "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja",
+    "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas",
+    "este", "fosse", "dele", "tu", "te", "vocês", "vos", "lhes", "meus", "minhas",
+    "teu", "tua", "teus", "tuas", "nosso", "nossa", "nossos", "nossas", "dela",
+    "delas", "esta", "estes", "estas", "aquele", "aquela", "aqueles", "aquelas",
+    "isto", "aquilo", "estou", "está", "estamos", "estão", "estive", "esteve",
+    "estivemos", "estiveram", "estava", "estávamos", "estavam", "estivera",
+    "estivéramos", "hei", "há", "havemos", "hão", "houve", "houvemos", "houveram",
+    "houvera", "houvéramos", "haja", "hajamos", "hajam", "houve", "houvemos",
+    "houverem", "houverei", "houverá", "houveremos", "houverão", "houveria",
+    "houveríamos", "houvesse", "houvéssemos", "houvessem", "havendo", "hedes",
+    "hei", "há", "houvemos", "houveram", "off"
+}
+
+def extract_topics(headings):
+    # Junta todas as headings numa lista e separa as palavras
+    words = []
+    for h in headings:
+        for w in re.findall(r'\b\w+\b', h.lower()):
+            if w not in STOPWORDS and len(w) > 2:
+                words.append(w)
+    counter = Counter(words)
+    # Pega as 5 palavras mais comuns como "temas"
+    top_words = [word for word, count in counter.most_common(5)]
+    return top_words
+
 #------------------------------------------------------------------
 #------------------------Resumo------------------------------------  
 #------------------------------------------------------------------  
 @app.post("/analyze")
 def analyze(payload: UrlRequest, db: Session = Depends(get_db)):
+    import re
     url = payload.url
     cached = get_cached_scrape(db, url)
     if not cached:
         raise HTTPException(status_code=404, detail="URL não processada ainda. Faça scrape primeiro.")
-    
-    content = cached.content
 
+    content = cached.content
     title = content.get("title", "Sem título")
     h1 = content.get("headings", {}).get("h1", [])
     h2 = content.get("headings", {}).get("h2", [])
     h3 = content.get("headings", {}).get("h3", [])
     emails = content.get("emails", [])
     phones = content.get("phones", [])
-    paragraphs = content.get("paragraphs", [])
+    paragraphs = content.get("paragraphs", []) or []
     meta_desc = content.get("meta_description", "")
+    all_headings = h1 + h2 + h3
+    texto_conteudo = " ".join(paragraphs).lower()
+    whatsapp_links = content.get("whatsapp_links", [])
+    keywords_detected = content.get("keywords_detected", [])
+    has_form = content.get("has_form", False)
 
-    # Construindo as recomendações de forma clara e prática
-    email_info = "Email disponível: {}".format(", ".join(emails)) if emails else "Email não identificado"
-    phone_info = "Telefone disponível: {}".format(", ".join(phones)) if phones else "Telefone não identificado"
-    content_richness = ("A página contém conteúdo detalhado, com {} parágrafos, o que indica informações úteis para análise."
-                        .format(len(paragraphs)) if len(paragraphs) > 30 else
-                        "Conteúdo limitado, pode não ser suficiente para análises detalhadas.")
-    title_structure = ("A página possui {} títulos H1 e {} títulos H2, indicando boa estrutura para navegação e SEO."
-                       .format(len(h1), len(h2)) if (len(h1) + len(h2)) > 0 else
-                       "A estrutura de títulos está fraca, o que pode dificultar navegação e análise.")
-    
-    trecho = " ".join(paragraphs[:3]).strip()
-    if len(trecho) > 500:
-        trecho = trecho[:500] + "..."
+    # Conjunto maior de palavras irrelevantes para ramo/produtos (stopwords + extras)
+    PALAVRAS_DESCARTADAS = STOPWORDS.union({
+        "categoria", "frete", "grátis", "brasil", "pagamento", "oferta", "loja", "produto",
+        "serviço", "item", "curso", "consult", "promoção", "site", "online", "compre", "agora",
+        "entrega", "desconto", "parcelamento"
+    })
 
+    def extract_ramo_from_title(title):
+        import re
+
+        # Lista básica e genérica de termos de nichos mais comuns, para tentar identificar ramo
+        nichos_comuns = [
+            "moda", "roupa", "roupas", "calçado", "calçados",
+            "eletrônico", "eletrônicos", "tecnologia", "alimentação", "alimentos",
+            "cosmético", "cosméticos", "educação", "serviço", "serviços",
+            "imóvel", "imóveis", "automóvel", "automóveis", "esporte", "esportes",
+            "brinquedo", "brinquedos", "livro", "livros", "jogos", "game", "games",
+            "bebida", "bebidas", "ferramenta", "ferramentas", "casa", "casas"
+        ]
+
+        # Stopwords básicas para título, além das já existentes
+        stopwords_title = set([
+            "loja", "site", "online", "ecommerce", "comércio", "virtual", "oficial",
+            "br", "ofertas", "oferta", "promoção", "promoções", "desconto",
+            "frete", "grátis", "compre", "agora", "melhor", "para", "de", "do", "da",
+            "e", "a", "o", "em", "no", "na"
+        ])
+
+        # Limpar título: tirar caracteres especiais e quebrar em palavras
+        palavras = re.findall(r'\b\w+\b', title.lower())
+
+        # Filtrar stopwords do título
+        palavras_filtradas = [p for p in palavras if p not in stopwords_title and len(p) > 2]
+
+        # Procurar nicho comum nas palavras filtradas
+        for p in palavras_filtradas:
+            if p in nichos_comuns:
+                return p.capitalize()
+
+        # Se não achou nicho, usar as primeiras palavras relevantes (até 3)
+        if palavras_filtradas:
+            return " ".join(palavras_filtradas[:3]).capitalize()
+
+        return "Indefinido"
+
+
+    # === No seu código analyze ===
+    temas = extract_topics(all_headings)
+
+    # Filtrar temas removendo palavras descartadas
+    temas_filtrados = [t for t in temas if t not in PALAVRAS_DESCARTADAS]
+
+    # Tentar ramo pelos temas filtrados
+    ramo = next((t.capitalize() for t in temas_filtrados), None)
+
+    # Se não encontrou ramo válido nos temas, extrai do título
+    if not ramo or ramo == "Indefinido":
+        ramo = extract_ramo_from_title(title)
+
+    # Produtos em destaque (produtos_venda)
+    produtos_venda = temas_filtrados
+    if not produtos_venda:
+        produtos_venda = temas[:3]  # fallback
+
+    # === Contato ===
+    contato_email = ", ".join(emails) if emails else None
+    contato_telefone = ", ".join(phones) if phones else None
+    whatsapps = ", ".join(whatsapp_links) if whatsapp_links else None
+
+    if not any([contato_email, contato_telefone, whatsapps]):
+        contato_info = "Nenhum contato direto (email, telefone ou WhatsApp) encontrado. Verifique canais alternativos como chat, redes sociais ou formulários."
+    else:
+        contato_info = ""
+        if contato_email:
+            contato_info += f"Emails: {contato_email}. "
+        if contato_telefone:
+            contato_info += f"Telefones: {contato_telefone}. "
+        if whatsapps:
+            contato_info += f"WhatsApp(s): {whatsapps}. "
+
+    # === Horário de atendimento ===
+    horario_atendimento = None
+    for p in paragraphs:
+        if re.search(r'\b(?:segunda|terça|quarta|quinta|sexta|sábado|domingo)\b', p.lower()):
+            horario_atendimento = p.strip()
+            break
+
+    # === Ticket médio ===
+    raw_prices = []
+    for p in paragraphs + h2 + h3:
+        matches = re.findall(r"R\$ ?\d{1,3}(?:\.\d{3})*(?:,\d{2})?", p)
+        raw_prices.extend(matches)
+
+    # Remover duplicados e normalizar os valores
+    def parse_price(p):
+        return float(p.replace("R$", "").replace(".", "").replace(",", ".").strip())
+
+    unique_prices = sorted(set(parse_price(p) for p in raw_prices if "0,00" not in p))
+    ticket_medio_fmt = [f"R$ {p:,.2f}".replace(".", "X").replace(",", ".").replace("X", ",") for p in unique_prices]
+
+    # === CTA ===
+    cta_present = any(
+        frase in texto_conteudo
+        for frase in ["compre agora", "fale conosco", "contate-nos", "solicite orçamento", "entre em contato"]
+    )
+    cta_text = "Sim" if cta_present else "Não"
+
+    # === Perguntas estratégicas ===
+    perguntas = []
+    for palavra in temas[:5]:
+        perguntas.append(f"- O que o site comunica sobre '{palavra}'?")
+    if not any([contato_email, contato_telefone, whatsapps]):
+        perguntas.append("- Como contatar o cliente, considerando que não há telefone, email ou WhatsApp visíveis?")
+    if ticket_medio_fmt:
+        faixa_menor = ticket_medio_fmt[0]
+        faixa_maior = ticket_medio_fmt[-1]
+        perguntas.append(f"- Qual a faixa de preços praticada? Ex: de {faixa_menor} a {faixa_maior}")
+    perguntas.append(f"- O site parece incentivar a conversão direta? (Chamada para ação: {cta_text})")
+
+    # === Montar resumo ===
     resumo = f"""
-Análise Comercial da Página
+Análise Comercial da Página: {title}
 
-Título da Página:
-{title}
+Meta descrição:
+{meta_desc or 'Não encontrada.'}
 
-Descrição:
-{meta_desc or "Não encontrada."}
+Ramo de atuação sugerido:
+{ramo}
 
-Resumo do Conteúdo:
-- {len(h1)} título(s) H1
-- {len(h2)} título(s) H2
-- {len(h3)} título(s) H3
-- {len(paragraphs)} parágrafo(s) extraídos
+Temas principais extraídos das headings:
+{', '.join(temas) if temas else "Nenhum tema claro identificado."}
 
-Informações de Contato:
-- {email_info}
-- {phone_info}
+Possíveis produtos ou serviços em destaque:
+- {'; '.join(produtos_venda) if produtos_venda else 'Não identificado'}
 
-Trecho Relevante do Conteúdo:
-{trecho}
+Contatos encontrados:
+{contato_info}
 
-Recomendações para a equipe de vendas:
-- {email_info}, permite contato direto para negociações ou dúvidas.
-- {phone_info}, pode exigir abordagem alternativa se ausente.
-- {content_richness}
-- {title_structure}
+Outros meios de contato mencionados no texto:
+{', '.join(keywords_detected) if keywords_detected else 'Nenhum termo específico encontrado.'}
 
-Conclusão:
-Este site apresenta dados que podem ser úteis para prospecção e abordagem comercial, com contatos e informações suficientes para embasar conversas.
+Formulário de contato detectado:
+{"Sim" if has_form else "Não"}
+
+Horário de atendimento:
+{horario_atendimento or 'Não identificado'}
+
+Faixas de preço encontradas (possível ticket médio):
+{', '.join(ticket_medio_fmt) if ticket_medio_fmt else 'Não identificado'}
+
+Possui chamada para ação?
+{cta_text}
+
+Perguntas estratégicas para a equipe de vendas:
+{chr(10).join(perguntas)}
 """.strip()
 
     return {"resumo": resumo}
-

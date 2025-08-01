@@ -3,13 +3,13 @@ import requests
 from bs4 import BeautifulSoup
 
 def scrape_data(url: str) -> dict:
-    response = requests.get(url)
+    response = requests.get(url, timeout=10)
     soup = BeautifulSoup(response.text, 'html.parser')
 
     data = {}
 
     # Título
-    data['title'] = soup.title.string if soup.title else 'Sem título'
+    data['title'] = soup.title.string.strip() if soup.title else 'Sem título'
 
     # Headings
     data['headings'] = {
@@ -20,14 +20,35 @@ def scrape_data(url: str) -> dict:
 
     # Meta description
     meta_desc = soup.find('meta', attrs={'name': 'description'})
-    data['meta_description'] = meta_desc['content'] if meta_desc else ''
+    data['meta_description'] = meta_desc['content'].strip() if meta_desc and meta_desc.get('content') else ''
 
-    # Parágrafos
-    data['paragraphs'] = [p.get_text(strip=True) for p in soup.find_all('p')]
+    # Parágrafos + elementos adicionais
+    text_blocks = soup.find_all(['p', 'span', 'div', 'li', 'a'])
+    data['paragraphs'] = [el.get_text(strip=True) for el in text_blocks if el.get_text(strip=True)]
 
-    # E-mails e telefones
-    text = soup.get_text()
-    data['emails'] = list(set(re.findall(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", text)))
-    data['phones'] = list(set(re.findall(r"\(?\d{2,3}\)?[\s-]?\d{4,5}[-\s]?\d{4}", text)))
+    # Texto plano completo
+    full_text = soup.get_text(separator=' ', strip=True).lower()
+
+    # E-mails
+    data['emails'] = list(set(re.findall(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", full_text)))
+
+    # Telefones (com DDD e separadores)
+    data['phones'] = list(set(re.findall(r"\(?\d{2,3}\)?[\s.-]?\d{4,5}[\s.-]?\d{4}", full_text)))
+
+    # Links de WhatsApp
+    whatsapp_links = [
+        a['href'] for a in soup.find_all('a', href=True)
+        if 'whatsapp' in a['href'] or 'wa.me' in a['href']
+    ]
+    data['whatsapp_links'] = list(set(whatsapp_links))
+
+    # Palavras-chave úteis para contato
+    keywords = ['whatsapp', 'televendas', 'sac', 'atendimento', 'contato', 'chat', 'telefone']
+    encontrados = [k for k in keywords if k in full_text]
+    data['keywords_detected'] = encontrados
+
+    # Verifica se há formulários
+    forms = soup.find_all('form')
+    data['has_form'] = len(forms) > 0
 
     return data

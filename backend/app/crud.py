@@ -12,6 +12,7 @@ def save_scrape(db: Session, url: str, content: dict):
     db_item = ScrapedSite(url=url, content=content)
     db.add(db_item)
     db.commit()
+    
 
 # Usuários
 def get_user_by_username(db: Session, username: str):
@@ -27,3 +28,5 @@ def create_user(db: Session, username: str, password: str, is_admin: bool = Fals
 
 def verify_password(plain, hashed):
     return pwd_context.verify(plain, hashed)
+
+
