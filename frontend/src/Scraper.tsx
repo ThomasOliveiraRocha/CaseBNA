@@ -55,12 +55,12 @@ export default function Scraper() {
     return (
         <div className={darkMode ? 'app dark' : 'app'}>
             <header className="header">
-                <h1 className="title">Analisador de Sites</h1>
                 {user?.is_admin && (
-                    <Link to="/admin" style={{ marginRight: '1rem', color: darkMode ? '#8e4dfb' : '#000' }}>
+                    <Link to="/admin" className="admin-link">
                         Painel Admin
                     </Link>
                 )}
+                <h1 className="title">Analisador de Sites</h1>
                 <button onClick={() => setDarkMode(!darkMode)} className="mode-toggle">
                     {darkMode ? '☀️' : '🌙'}
                 </button>

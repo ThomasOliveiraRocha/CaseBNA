@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import './register.css';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
@@ -34,26 +35,28 @@ export default function Register() {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="auth-box">
-            <h2>Registrar</h2>
-            <input
-                type="text"
-                placeholder="Usuário"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoFocus
-            />
-            <input
-                type="password"
-                placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-            />
-            <button type="submit">Registrar</button>
-            {error && <p className="error" style={{ color: 'red' }}>{error}</p>}
-            {success && <p className="success" style={{ color: 'green' }}>{success}</p>}
-        </form>
+        <div className="auth-wrapper">
+            <form onSubmit={handleSubmit} className="auth-box">
+                <h2>Registrar</h2>
+                <input
+                    type="text"
+                    placeholder="Usuário"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    autoFocus
+                />
+                <input
+                    type="password"
+                    placeholder="Senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+                <button type="submit">Registrar</button>
+                {error && <p className="error">{error}</p>}
+                {success && <p className="success">{success}</p>}
+            </form>
+        </div>
     );
 }

@@ -38,12 +38,12 @@ export default function AdminPanel() {
                 <h1 className="admin-title">Painel Admin - Sites Scrapeados</h1>
 
                 <div className="admin-header-buttons">
-                    <Link to="/" className="admin-button">
+                    <Link to="/" className="admin-back-button">
                         ← Voltar
                     </Link>
                     <button
                         onClick={() => setDarkMode(!darkMode)}
-                        className="admin-button mode-toggle"
+                        className="admin-mode-toggle"
                         aria-label="Alternar modo claro/escuro"
                     >
                         {darkMode ? '☀️' : '🌙'}

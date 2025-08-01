@@ -29,7 +29,7 @@ body {
   color: #fff;
 }
 
-/* Header fixo e sempre visível */
+/* Header fixo e simétrico */
 .header {
   position: fixed;
   top: 0;
@@ -42,9 +42,12 @@ body {
   padding: 2rem;
   background: inherit;
   backdrop-filter: blur(10px);
+  box-sizing: border-box;
 }
 
+/* Centraliza o título com simetria */
 .title {
+  margin: 0 auto;
   border: 2px solid;
   padding: 0.5rem 1rem;
   border-radius: 10px;
@@ -62,11 +65,12 @@ body {
   color: #000;
 }
 
-/* Botão dark/light fixo no canto direito */
+/* Botão dark/light no canto direito */
 .mode-toggle {
   position: absolute;
   right: 2rem;
-  top: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -74,16 +78,56 @@ body {
   color: inherit;
 }
 
+/* Botão admin no canto esquerdo */
+.admin-link {
+  position: absolute;
+  left: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.4rem 1rem;
+  border: 2px solid;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background: transparent;
+  cursor: pointer;
+}
+
+.app.dark .admin-link {
+  border-color: #8e4dfb;
+  color: #8e4dfb;
+}
+
+.app:not(.dark) .admin-link {
+  border-color: #000;
+  color: #000;
+}
+
+/* Hover admin-link - modo claro */
+.admin-link:hover {
+  background: #8e4dfb;
+  color: #fff;
+}
+
+/* Hover admin-link - modo escuro */
+.app.dark .admin-link:hover {
+  background: #8e4dfb;
+  color: #000;
+  /* Preto para contraste no hover escuro */
+}
+
 /* Main centralizado e tela cheia */
 .main {
-  margin-top: 500px;
-  /* ou ajuste conforme necessário */
+  padding-top: 300px;
+  /* espaço para não encostar no header */
   width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
+  padding-inline: 2rem;
   box-sizing: border-box;
 }
 
@@ -104,25 +148,42 @@ body {
   font-size: 1rem;
 }
 
+/* Botão analisar com hover */
 .input-section button {
   padding: 0.6rem 1.5rem;
   border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
   border: 2px solid;
-  transition: 0.2s ease;
+  background: transparent;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .app.dark .input-section button {
-  background: transparent;
   border-color: #8e4dfb;
   color: #8e4dfb;
+  background: transparent;
 }
 
+/* Modo claro - botão com fundo preto e texto branco */
 .app:not(.dark) .input-section button {
-  background: #8e4dfb;
+  border-color: #000;
+  background: #000;
   color: #fff;
+}
+
+/* Hover botão analisar modo claro - fundo cinza escuro */
+.app:not(.dark) .input-section button:hover {
+  background: #333;
+  border-color: #333;
+  color: #fff;
+}
+
+/* Hover botão analisar modo escuro */
+.app.dark .input-section button:hover {
+  background: #8e4dfb;
   border-color: #8e4dfb;
+  color: #000;
 }
 
 /* Resultados */
@@ -168,6 +229,7 @@ body {
   padding: 0.4rem 0.8rem;
   cursor: pointer;
   border-radius: 6px;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .app.dark .result-header button {
@@ -178,6 +240,20 @@ body {
 .app:not(.dark) .result-header button {
   border-color: #000;
   color: #000;
+}
+
+/* Hover botão na seção resultados - modo claro */
+.app:not(.dark) .result-header button:hover {
+  background: #8e4dfb;
+  color: #fff;
+  border-color: #8e4dfb;
+}
+
+/* Hover botão na seção resultados - modo escuro */
+.app.dark .result-header button:hover {
+  background: #8e4dfb;
+  color: #000;
+  border-color: #8e4dfb;
 }
 
 .scroll-box {

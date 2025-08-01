@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react';
+import './login.css';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
@@ -32,28 +33,35 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="auth-box">
-            <h2>Login</h2>
-            <form onSubmit={handleLogin}>
-                <input
-                    type="text"
-                    placeholder="Usuário"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                    autoFocus
-                />
-                <input
-                    type="password"
-                    placeholder="Senha"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-                <button type="submit">Entrar</button>
-            </form>
-            {error && <p className="error" style={{ color: 'red' }}>{error}</p>}
-            {success && <p className="success" style={{ color: 'green' }}>{success}</p>}
+        <div className="auth-wrapper">
+            <div className="auth-box">
+                <h2>Login</h2>
+                <form onSubmit={handleLogin}>
+                    <input
+                        type="text"
+                        placeholder="Usuário"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                        autoFocus
+                    />
+                    <input
+                        type="password"
+                        placeholder="Senha"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                    <button type="submit">Entrar</button>
+                </form>
+                {error && <p className="error">{error}</p>}
+                {success && <p className="success">{success}</p>}
+                <div className="auth-links">
+                    <a href="/scraper">Analisar URL</a>
+                    <a href="/admin">Painel Admin</a>
+                    <a href="/register">Registrar</a>
+                </div>
+            </div>
         </div>
     );
 };
