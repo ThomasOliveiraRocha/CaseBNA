@@ -6,9 +6,9 @@ from app.scraping import scrape_data
 from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import UrlRequest
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi import Security
+from fastapi import Security, Body
 from app import auth, crud, schemas
-from app.models import ScrapedSite  # para o painel admin funcionar
+from app.models import ScrapedSite  
 
 app = FastAPI()
 
@@ -23,6 +23,7 @@ app.add_middleware(
 init_db()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+ADMIN_CREATION_PASSWORD = "admin123"
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
     payload = auth.verify_token(token)
@@ -55,6 +56,10 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     token = auth.create_access_token(data={"sub": user.username, "is_admin": user.is_admin})
     return {"access_token": token, "token_type": "bearer"}
 
+@app.get("/me")
+def read_users_me(current_user=Depends(get_current_user)):
+    return current_user
+
 @app.get("/admin/sites")
 def admin_sites(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     if not current_user.get("is_admin"):
@@ -62,6 +67,22 @@ def admin_sites(current_user=Depends(get_current_user), db: Session = Depends(ge
     
     sites = db.query(ScrapedSite).order_by(ScrapedSite.scraped_at.desc()).all()
     return [{"url": s.url, "scraped_at": s.scraped_at.isoformat()} for s in sites]
+
+@app.post("/create-admin")
+def create_admin(
+    username: str = Body(...),
+    password: str = Body(...),
+    admin_password: str = Body(...),
+    db: Session = Depends(get_db),
+):
+    if admin_password != ADMIN_CREATION_PASSWORD:
+        raise HTTPException(status_code=403, detail="Senha de admin inválida")
+
+    if crud.get_user_by_username(db, username):
+        raise HTTPException(status_code=400, detail="Usuário já existe")
+
+    crud.create_user(db, username, password, is_admin=True)
+    return {"msg": f"Usuário admin '{username}' criado com sucesso"}
 
 
 #------------------------------------------------------------------

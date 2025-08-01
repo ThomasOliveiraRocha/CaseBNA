@@ -11,7 +11,7 @@ interface AuthContextType {
     token: string | null;
     login: (username: string, password: string) => Promise<void>;
     logout: () => void;
-    register: (username: string, password: string) => Promise<boolean>; // ADICIONADO
+    register: (username: string, password: string) => Promise<boolean>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -19,7 +19,7 @@ export const AuthContext = createContext<AuthContextType>({
     token: null,
     login: async () => { },
     logout: () => { },
-    register: async () => false, // ADICIONADO valor padrão
+    register: async () => false,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -58,8 +58,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!userRes.ok) throw new Error('Erro ao buscar dados do usuário');
         const userData = await userRes.json();
 
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        const user = {
+            username: userData.sub,
+            is_admin: Boolean(userData.is_admin),
+        };
+
+        setUser(user);
+        localStorage.setItem('user', JSON.stringify(user));
     };
 
     // Implementação do register

@@ -17,9 +17,9 @@ def save_scrape(db: Session, url: str, content: dict):
 def get_user_by_username(db: Session, username: str):
     return db.query(User).filter(User.username == username).first()
 
-def create_user(db: Session, username: str, password: str):
+def create_user(db: Session, username: str, password: str, is_admin: bool = False):
     hashed = pwd_context.hash(password)
-    user = User(username=username, hashed_password=hashed)
+    user = User(username=username, hashed_password=hashed, is_admin=is_admin)
     db.add(user)
     db.commit()
     db.refresh(user)

@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';  // ou outro CSS que você estiver usando
+import React, { useState, useEffect, useContext } from 'react';
+import './App.css';
+import { AuthContext } from './AuthContext';
+import { Link } from 'react-router-dom';
 
 export default function Scraper() {
     const [url, setUrl] = useState('');
@@ -10,6 +12,8 @@ export default function Scraper() {
     const [showScrape, setShowScrape] = useState(true);
     const [showAnalysis, setShowAnalysis] = useState(true);
     const [darkMode, setDarkMode] = useState(true);
+    const { user } = useContext(AuthContext);
+
 
     useEffect(() => {
         document.title = 'CaseBNA';
@@ -52,6 +56,11 @@ export default function Scraper() {
         <div className={darkMode ? 'app dark' : 'app'}>
             <header className="header">
                 <h1 className="title">Analisador de Sites</h1>
+                {user?.is_admin && (
+                    <Link to="/admin" style={{ marginRight: '1rem', color: darkMode ? '#8e4dfb' : '#000' }}>
+                        Painel Admin
+                    </Link>
+                )}
                 <button onClick={() => setDarkMode(!darkMode)} className="mode-toggle">
                     {darkMode ? '☀️' : '🌙'}
                 </button>
