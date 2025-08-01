@@ -1,114 +1,72 @@
-import { useState, useEffect } from 'react';
-import './App.css';
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { AuthContext, AuthProvider } from './AuthContext';
+import Login from './Login';
+import Register from './Register';
+import Scraper from './Scraper';
+import AdminPanel from './AdminPanel';
 
-function App() {
-  const [url, setUrl] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [scrapeData, setScrapeData] = useState(null);
-  const [analysis, setAnalysis] = useState(null);
-  const [error, setError] = useState('');
-  const [showScrape, setShowScrape] = useState(true);
-  const [showAnalysis, setShowAnalysis] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
 
-  useEffect(() => {
-    document.title = 'CaseBNA';
-  }, []);
+function RequireAuth({ children }: any) {
+  const { user } = useContext(AuthContext);
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    setError('');
-    setScrapeData(null);
-    setAnalysis(null);
-
-    try {
-      const scrapeRes = await fetch('http://localhost:8000/scrape', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      });
-
-      if (!scrapeRes.ok) throw new Error('Erro ao fazer scrape.');
-      const scrapeJson = await scrapeRes.json();
-      setScrapeData(scrapeJson.data);
-
-      const analyzeRes = await fetch('http://localhost:8000/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      });
-
-      if (!analyzeRes.ok) throw new Error('Erro ao fazer análise.');
-      const analyzeJson = await analyzeRes.json();
-      setAnalysis(analyzeJson.resumo || analyzeJson.summary || analyzeJson);
-    } catch (err: any) {
-      setError(err.message || 'Erro desconhecido');
-    }
-
-    setLoading(false);
-  };
+function AppLayout() {
+  const { user, logout } = useContext(AuthContext);
 
   return (
-    <div className={darkMode ? 'app dark' : 'app'}>
-      <header className="header">
-        <h1 className="title">Analisador de Sites</h1>
-        <button onClick={() => setDarkMode(!darkMode)} className="mode-toggle">
-          {darkMode ? '☀️' : '🌙'}
-        </button>
-      </header>
+    <div>
+      <nav style={{ padding: 10, borderBottom: '1px solid #ccc', marginBottom: 20 }}>
+        {user ? (
+          <>
+            <span>Olá, {user.username}!</span> |{' '}
+            <Link to="/">Analisar URL</Link> |{' '}
+            {user.is_admin && <Link to="/admin">Painel Admin</Link>} |{' '}
+            <button onClick={logout}>Sair</button>
+          </>
+        ) : (
+          <>
+            <Link to="/login">Login</Link> | <Link to="/register">Registrar</Link>
+          </>
+        )}
+      </nav>
 
-      <main className="main">
-        <section className="input-section">
-          <input
-            type="text"
-            placeholder="Digite a URL..."
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-          />
-          <button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Processando...' : 'Analisar'}
-          </button>
-          {error && <p className="error">Erro: {error}</p>}
-        </section>
-
-        <section className="results">
-          {scrapeData && (
-            <div className="result-block">
-              <div className="result-header">
-                <h2>Dados Extraídos</h2>
-                <button onClick={() => setShowScrape(!showScrape)}>
-                  {showScrape ? 'Esconder' : 'Mostrar'}
-                </button>
-              </div>
-              {showScrape && (
-                <pre className="scroll-box">
-                  {JSON.stringify(scrapeData, null, 2)}
-                </pre>
-              )}
-            </div>
-          )}
-
-          {analysis && (
-            <div className="result-block">
-              <div className="result-header">
-                <h2>Resumo Comercial</h2>
-                <button onClick={() => setShowAnalysis(!showAnalysis)}>
-                  {showAnalysis ? 'Esconder' : 'Mostrar'}
-                </button>
-              </div>
-              {showAnalysis && (
-                <pre className="scroll-box">
-                  {typeof analysis === 'string'
-                    ? analysis
-                    : JSON.stringify(analysis, null, 2)}
-                </pre>
-              )}
-            </div>
-          )}
-        </section>
-      </main>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <RequireAuth>
+              <Scraper />
+            </RequireAuth>
+          }
+        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/admin"
+          element={
+            <RequireAuth>
+              {user?.is_admin ? <AdminPanel /> : <Navigate to="/" replace />}
+            </RequireAuth>
+          }
+        />
+        {/* Redireciona qualquer rota desconhecida para / */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppLayout />
+      </Router>
+    </AuthProvider>
+  );
+}
