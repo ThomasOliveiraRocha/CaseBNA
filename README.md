@@ -14,43 +14,48 @@ A solução completa envolve:
 
 ---
 
-## Planejamento da Semana
+##  Planejamento da Semana
 
-### Dia 1 - Terça-feira (29/07)
-
-- [x] Criar repositório e configurar ambiente local
-- [x] Iniciar backend com FastAPI
-- [x] Criar endpoint `/scrape` que recebe uma URL e retorna o `<title>`
-- [x] Adicionar dependências no `requirements.txt`
-- [x] Criar `.gitignore`
-- [x] Documentar projeto no `README.md`
+| Dia        | Atividades                                                                            |
+|------------|---------------------------------------------------------------------------------------|
+| **29/07**  | Configuração do repositório, FastAPI inicial, endpoint `/scrape`, título da página    |
+| **30/07**  | Extração de dados úteis (e-mail, telefone, headings), banco SQLite, cache de scraping |
+| **31/07**  | Rota `/analyze` com IA, frontend com React (Vite), JWT e painel admin                 |
+| **01/08**  | Finalização, testes, ajustes de layout, documentação e apresentação                   |
 
 ---
 
-### Dia 2 - Quarta-feira (30/07)
+##  Tecnologias Utilizadas
 
-- [x] Melhorar scraping com mais dados úteis (ex: headings, e-mails, telefone, etc)
-- [x] Criar banco de dados local (SQLite ou MongoDB)
-- [x] Implementar cache de scraping para URLs já processadas
-- [x] Modularizar código
+### Backend
+- **Framework**: FastAPI
+- **Scraping**: BeautifulSoup + Requests
+- **Banco de Dados**: SQLite (via SQLAlchemy)
+- **Autenticação**: JWT (JSON Web Tokens)
 
+### Frontend
+- **Framework**: React + Vite
+- **Estilização**: CSS 
+- **Autenticação**: LocalStorage + JWT
 ---
+## Instalação e Execução
 
-### Dia 3 - Quinta-feira (31/07)
+### Pré-requisitos
+- Node.js + npm
+- Python 3.10+
+- SQLite3
 
-- [x] Criar rota `/analyze` que usa IA com o conteúdo da página
-- [x] Iniciar frontend com React (Vite)
-- [x] Criar tela básica com envio de URL e exibição dos resultados
-- [x] Finalizar frontend com visualização de histórico e dados
-- [x] Criar autenticação simples com JWT
-- [x] Criar painel admin (bônus)
-
----
-
-### Dia 4 - Sexta-feira (01/08)
-- [x] Montar Apresentação
-
-
----
-
-
+### Backend
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
